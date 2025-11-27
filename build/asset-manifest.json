@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.2a47ea9e.css",
+    "main.js": "/static/js/main.6fe98ddb.js",
+    "static/js/453.d210a90b.chunk.js": "/static/js/453.d210a90b.chunk.js",
+    "static/media/5f05984cd4666-agadir.jpg": "/static/media/5f05984cd4666-agadir.9559f98b6d2da5bab6dd.jpg",
+    "static/media/spritesheet.svg": "/static/media/spritesheet.a4e0eb7ad904a4858361.svg",
+    "index.html": "/index.html",
+    "main.2a47ea9e.css.map": "/static/css/main.2a47ea9e.css.map",
+    "main.6fe98ddb.js.map": "/static/js/main.6fe98ddb.js.map",
+    "453.d210a90b.chunk.js.map": "/static/js/453.d210a90b.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2a47ea9e.css",
+    "static/js/main.6fe98ddb.js"
+  ]
+}

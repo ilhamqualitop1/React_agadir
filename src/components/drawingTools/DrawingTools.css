@@ -1,0 +1,35 @@
+
+
+.drawing-tools-sidebar {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.drawing-tools-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tool-btn {
+    background: #007bff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-size: 18px;
+    transition: background 0.3s;
+}
+
+.tool-btn:hover {
+    background: #0056b3;
+}

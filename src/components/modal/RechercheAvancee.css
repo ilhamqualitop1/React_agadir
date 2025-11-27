@@ -1,0 +1,122 @@
+.advanced-search-button , .logout-button {
+    background: #ffffff;
+    color: black;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  .logout-button{
+    background: #3c7ea9;
+    color: white;
+    width: 200px;
+    opacity: 0.6;
+  }
+  .logout-button:hover{
+ 
+    opacity: 1;
+  }
+  
+  /* Overlay sombre */
+  .overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
+  /* Fenêtre modale stylée */
+  .modal {
+    background: #ffffff;
+    padding: 30px;
+    max-width: 420px;
+    width: 90%;
+    margin: auto;
+    margin-top: 10vh;
+    border-radius: 12px;
+    z-index: 2001;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .modal form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal label {
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .modal input {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border-color 0.3s;
+  }
+  
+  .modal select {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border-color 0.3s;
+  }
+  
+  .modal input:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  
+  /* Boutons du formulaire */
+  .modal button[type="submit"],
+  .modal button:not([type]) {
+    padding: 10px 15px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #7e7d81;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .modal button[type="submit"]:hover {
+    background-color: #989aa5;
+  }
+  
+  .modal button:not([type]):hover {
+    background-color: #6c757d;
+  }
+  
+  /* Animation d'apparition */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
