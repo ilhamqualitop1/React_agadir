@@ -77,7 +77,7 @@ export default function SearchPoint({ selectedProjection }) {
         maxWidth: "300px",
       }}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
           value={coordInput}
@@ -93,13 +93,13 @@ export default function SearchPoint({ selectedProjection }) {
         <button
           type="submit"
           style={{
-            marginTop: "6px",
             backgroundColor: "#2563eb",
             color: "white",
             border: "none",
             borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "bold",
+            padding: "8px 12px",
           }}
         >
           🔎

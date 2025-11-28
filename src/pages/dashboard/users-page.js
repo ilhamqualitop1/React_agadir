@@ -5,11 +5,12 @@ import axiosInstance from "../../utils/axios";
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const isAdmin = localStorage.getItem("role") === "admin";
 
   const [formData, setFormData] = useState({
     id: null,
     firstname: "",
-    lastname: "",
+    name: "",
     email: "",
     password: "",
     role: "user",
@@ -38,7 +39,7 @@ const UsersPage = () => {
     setFormData({
       id: null,
       firstname: "",
-      lastname: "",
+      name: "",
       email: "",
       password: "",
       role: "user",
@@ -53,7 +54,7 @@ const UsersPage = () => {
     setFormData({
       id: user.id,
       firstname: user.firstname,
-      lastname: user.lastname,
+      name: user.name,
       email: user.email,
       password: "",
       role: user.role,
@@ -129,8 +130,8 @@ const UsersPage = () => {
         <tbody>
           {users.map((user) => (
             <tr key={user.id}>
+              <td>{user.name}</td>
               <td>{user.firstname}</td>
-              <td>{user.lastname}</td>
               <td>{user.email}</td>
               <td>{user.role}</td>
 
@@ -159,16 +160,16 @@ const UsersPage = () => {
             <Form onSubmit={handleSubmit}>
               <Input
                 name="firstname"
-                placeholder="Nom"
+                placeholder="Prénom"
                 value={formData.firstname}
                 onChange={handleChange}
                 required
               />
 
               <Input
-                name="lastname"
-                placeholder="Prénom"
-                value={formData.lastname}
+                name="name"
+                placeholder="Nom"
+                value={formData.name}
                 onChange={handleChange}
                 required
               />

@@ -56,6 +56,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

@@ -8,6 +8,12 @@ import "../../config/proj-config.js";
 export default function FileImport({ onFileLoad, selectedProjection }) {
   const fileInputRef = useRef();
   const [dragActive, setDragActive] = useState(false);
+  const [pendingImport, setPendingImport] = useState(null);
+  const [renameModal, setRenameModal] = useState({
+    open: false,
+    value: "",
+    defaultName: "",
+  });
 
   const convertToWGS84 = ([x, y]) => {
     if (!selectedProjection || !proj4.defs[selectedProjection]) {
@@ -90,22 +96,12 @@ export default function FileImport({ onFileLoad, selectedProjection }) {
           };
         }
 
-        if (geojson) {
+        if (geojson?.features?.length) {
           const bounds = computeBounds(geojson.features);
           const defaultName = file.name.replace(/\.[^/.]+$/, "");
-          const customName = window.prompt("Renommer le fichier importé :", defaultName) || defaultName;
-
-          geojson.name = customName;
-          geojson.features = geojson.features.map((feature) => ({
-            ...feature,
-            properties: {
-              ...feature.properties,
-              filename: customName,
-            },
-          }));
-
+          setPendingImport({ geojson, bounds });
+          setRenameModal({ open: true, value: defaultName, defaultName });
           console.log("✅ GeoJSON généré :", geojson);
-          onFileLoad(geojson, bounds);
         } else {
           console.error("❌ Format non pris en charge");
         }
@@ -130,9 +126,41 @@ export default function FileImport({ onFileLoad, selectedProjection }) {
     }
   };
 
+  const closeRenameModal = () => {
+    setRenameModal({ open: false, value: "", defaultName: "" });
+    setPendingImport(null);
+  };
+
+  const submitRename = (e) => {
+    e.preventDefault();
+    if (!pendingImport?.geojson) return;
+    const finalName =
+      (renameModal.value && renameModal.value.trim()) || renameModal.defaultName || "Fichier";
+
+    const geojsonWithName = {
+      ...pendingImport.geojson,
+      name: finalName,
+      features: pendingImport.geojson.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          filename: finalName,
+        },
+      })),
+    };
+
+    onFileLoad(geojsonWithName, pendingImport.bounds);
+    closeRenameModal();
+  };
+
+  const baseDropZone =
+    "w-56 rounded-xl border-2 border-dashed px-4 py-3 text-sm transition shadow-sm bg-white/70 backdrop-blur";
+  const activeDropZone =
+    "border-brand-primary bg-brand-primary/10 text-brand-primary shadow-md shadow-brand-primary/10";
+
   return (
     <div
-      className={`file-import-control ${dragActive ? "drag-active" : ""}`}
+      className="absolute left-4 bottom-6 z-[1000] flex flex-col items-start gap-3"
       onDragEnter={(e) => {
         e.preventDefault();
         setDragActive(true);
@@ -152,58 +180,73 @@ export default function FileImport({ onFileLoad, selectedProjection }) {
         accept=".dxf,.kml,.gpx,.csv,.geojson,.json"
         onChange={handleFileChange}
         ref={fileInputRef}
-        style={{ display: "none" }}
+        className="hidden"
       />
-      <button className="button-import" onClick={() => fileInputRef.current.click()}>
-        📂 Importer DXF, KML
+      <button
+        className="inline-flex items-center gap-2 rounded-xl bg-white/90 px-4 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-slate-900/10 ring-1 ring-slate-200 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-xl"
+        onClick={() => fileInputRef.current.click()}
+        type="button"
+      >
+        <span className="text-lg">📂</span> Importer DXF, KML
       </button>
-      <div className="drop-zone">ou glissez un fichier ici</div>
+      <div
+        className={`${baseDropZone} ${dragActive ? activeDropZone : "text-slate-600"}`}
+      >
+        Glissez un fichier ici
+      </div>
 
-      <style>{`
-        .file-import-control {
-          position: absolute;
-          top: 550px;
-          left: 10px;
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 8px;
-        }
-
-        .button-import {
-          background-color: rgb(231, 233, 236);
-          color: rgb(80, 82, 85);
-          font-weight: 600;
-          padding: 10px 16px;
-          border: none;
-          border-radius: 8px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-        }
-
-        .button-import:hover {
-          background-color: rgb(221, 226, 236);
-        }
-
-        .drop-zone {
-          padding: 10px 16px;
-          border: 2px dashed #999;
-          border-radius: 8px;
-          background-color: #f9f9f9;
-          text-align: center;
-          font-size: 14px;
-          color: #555;
-          width: 220px;
-        }
-
-        .file-import-control.drag-active .drop-zone {
-          border-color: #3f51b5;
-          background-color: #e3f2fd;
-          color: #1a237e;
-        }
-      `}</style>
+      {renameModal.open && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-floating">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  Import
+                </p>
+                <h3 className="text-xl font-bold text-slate-900">
+                  Renommer le fichier importé
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeRenameModal}
+                className="text-lg text-slate-500 transition hover:text-slate-800"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={submitRename} className="space-y-4">
+              <label className="block text-sm font-semibold text-slate-700">
+                Nom du fichier
+              </label>
+              <input
+                value={renameModal.value}
+                onChange={(e) =>
+                  setRenameModal((prev) => ({ ...prev, value: e.target.value }))
+                }
+                autoFocus
+                placeholder="Saisissez un nom lisible"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/15"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closeRenameModal}
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-primary/20 transition hover:-translate-y-0.5 hover:bg-brand-primaryDark"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

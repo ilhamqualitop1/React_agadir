@@ -47,7 +47,7 @@ const FitToImportedLayers = ({ layers }) => {
 
 export default function MapPage() {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role"); // récupère le rôle de l'utilisateur
+  const role = localStorage.getItem("role"); // récupérer le rôle stocké
 
   const [selectedProjection, setSelectedProjection] = useState("EPSG:26192");
   const [searchTitre, setSearchTitre] = useState("");
@@ -61,6 +61,11 @@ export default function MapPage() {
   const [showSavedFiles, setShowSavedFiles] = useState(false);
   const [updatedData, setUpdatedData] = useState(null);
   const [originalLayers, setOriginalLayers] = useState([]);
+  const [renameModal, setRenameModal] = useState({
+    open: false,
+    layerId: null,
+    value: "",
+  });
 
   const apiUrl = process.env.geo_portail_API_URL;
 
@@ -128,6 +133,30 @@ export default function MapPage() {
     setImportedLayers((prev) => prev.filter((layer) => layer.id !== id));
   };
 
+  const openRenameModal = (layer) => {
+    setRenameModal({
+      open: true,
+      layerId: layer.id,
+      value: layer.name || "",
+    });
+  };
+
+  const closeRenameModal = () =>
+    setRenameModal({ open: false, layerId: null, value: "" });
+
+  const submitRename = (e) => {
+    e.preventDefault();
+    const newName = renameModal.value.trim();
+    if (!newName) return;
+
+    setImportedLayers((prev) =>
+      prev.map((layer) =>
+        layer.id === renameModal.layerId ? { ...layer, name: newName } : layer
+      )
+    );
+    closeRenameModal();
+  };
+
   const fetchSavedFiles = async () => {
     try {
       const res = await fetch("http://localhost:5050/api/geojson/liste-fichiers");
@@ -139,41 +168,13 @@ export default function MapPage() {
     }
   };
 
-  const controlPanelStyle = {
-    position: "absolute",
-    bottom: 20,
-    right: 10,
-    background: "white",
-    padding: 10,
-    borderRadius: 8,
-    zIndex: 1000,
-    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-    fontSize: "14px",
-  };
-
   return (
     <>
-      {/* 🔹 Bouton "Gestion des utilisateurs" pour admin */}
       {role === "admin" && (
-        <div
-          style={{
-            position: "absolute",
-            top: 550,
-            right: 10,
-            zIndex: 1000,
-          }}
-        >
+        <div className="absolute right-4 bottom-20 z-[1000]">
           <button
             onClick={() => navigate("/dashboard/users")}
-            style={{
-              padding: "10px 16px",
-              backgroundColor: "#2b6cb0",
-              color: "white",
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-            }}
+            className="rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-primary/20 transition hover:-translate-y-0.5 hover:bg-brand-primaryDark"
           >
             Gestion des utilisateurs
           </button>
@@ -298,75 +299,60 @@ export default function MapPage() {
 
       {/* panel couches importées */}
       {importedLayers.length > 0 && (
-        <div style={controlPanelStyle}>
-          <strong>📂 Couches importées</strong>
-          {importedLayers.map((layer, idx) => (
-            <div
-              key={`layerpanel-${layer.id}-${idx}`}
-              style={{ display: "flex", alignItems: "center", marginTop: 6 }}
-            >
-              <input
-                type="checkbox"
-                checked={layer.visible}
-                onChange={() => toggleLayerVisibility(layer.id)}
-                style={{ marginRight: 6 }}
-              />
-              <span style={{ flexGrow: 1 }}>{layer.name}</span>
-              <button
-                onClick={() => {
-                  const newName = prompt("Nouveau nom de la couche :", layer.name);
-                  if (newName)
-                    setImportedLayers((prev) =>
-                      prev.map((l) =>
-                        l.id === layer.id ? { ...l, name: newName } : l
-                      )
-                    );
-                }}
-                style={{
-                  marginLeft: 6,
-                  background: "#2196f3",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  cursor: "pointer",
-                }}
-              >
-                ✏️
-              </button>
-              <button
-                onClick={() => deleteLayer(layer.id)}
-                style={{
-                  marginLeft: 6,
-                  background: "#f44336",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  cursor: "pointer",
-                }}
-              >
-                ❌
-              </button>
-              <button
-                onClick={() => setIsDraggable((prev) => !prev)}
-                style={{
-                  marginLeft: 6,
-                  background: isDraggable ? "#e67e22" : "#16a085",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  cursor: "pointer",
-                }}
-              >
-                🚚
-              </button>
+        <div className="absolute right-4 bottom-6 z-[1000] w-80 rounded-2xl bg-white p-4 shadow-floating ring-1 ring-slate-100 backdrop-blur">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Couches
+              </p>
+              <strong className="text-slate-900">📂 Couches importées</strong>
             </div>
-          ))}
+            <button
+              onClick={() => setIsDraggable((prev) => !prev)}
+              className={`rounded-full px-3 py-2 text-xs font-semibold text-white shadow-md transition ${isDraggable
+                ? "bg-amber-500 shadow-amber-200"
+                : "bg-emerald-600 shadow-emerald-200"
+                }`}
+            >
+              {isDraggable ? "Déplacement ON" : "Déplacement OFF"}
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {importedLayers.map((layer, idx) => (
+              <div
+                key={`layerpanel-${layer.id}-${idx}`}
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+              >
+                <input
+                  type="checkbox"
+                  checked={layer.visible}
+                  onChange={() => toggleLayerVisibility(layer.id)}
+                  className="h-4 w-4 accent-brand-primary"
+                />
+                <span className="flex-grow text-sm font-semibold text-slate-800">
+                  {layer.name}
+                </span>
+                <button
+                  onClick={() => openRenameModal(layer)}
+                  className="rounded-lg bg-blue-500 px-2 py-1 text-xs text-white shadow-sm transition hover:bg-blue-600"
+                  title="Renommer"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => deleteLayer(layer.id)}
+                  className="rounded-lg bg-red-500 px-2 py-1 text-xs text-white shadow-sm transition hover:bg-red-600"
+                  title="Supprimer"
+                >
+                  ❌
+                </button>
+              </div>
+            ))}
+          </div>
 
           {/* boutons enregistrer / annuler / charger */}
-          <div style={{ marginTop: 10 }}>
+          <div className="mt-4 space-y-2">
             <button
               onClick={async () => {
                 try {
@@ -423,15 +409,7 @@ export default function MapPage() {
                   alert("❌ Erreur serveur");
                 }
               }}
-              style={{
-                background: "#4caf50",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                padding: "6px 10px",
-                cursor: "pointer",
-                width: "100%",
-              }}
+              className="w-full rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-700"
             >
               💾 Enregistrer dans la base
             </button>
@@ -442,32 +420,14 @@ export default function MapPage() {
                 setUpdatedData(null);
                 alert("✅ Déplacements annulés, données restaurées.");
               }}
-              style={{
-                marginTop: 6,
-                background: "#9e9e9e",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                padding: "6px 10px",
-                cursor: "pointer",
-                width: "100%",
-              }}
+              className="w-full rounded-xl bg-slate-600 px-3 py-2 text-sm font-semibold text-white shadow-md shadow-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-700"
             >
               🔁 Annuler les déplacements
             </button>
 
             <button
               onClick={fetchSavedFiles}
-              style={{
-                marginTop: 6,
-                background: "#1976d2",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                padding: "6px 10px",
-                cursor: "pointer",
-                width: "100%",
-              }}
+              className="w-full rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-md shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
             >
               📥 Charger depuis la base
             </button>
@@ -477,81 +437,104 @@ export default function MapPage() {
 
       {/* liste fichiers sauvegardés */}
       {showSavedFiles && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            background: "white",
-            border: "1px solid #ccc",
-            borderRadius: 8,
-            padding: 10,
-            zIndex: 1000,
-            width: "600px",
-            overflowY: "auto",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <strong>📁 Fichiers sauvegardés :</strong>
-            <button
-              onClick={() => setShowSavedFiles(false)}
-              style={{
-                background: "transparent",
-                border: "none",
-                fontSize: 18,
-                cursor: "pointer",
-                color: "#888",
-              }}
-              title="Fermer"
-            >
-              ❌
-            </button>
-          </div>
-          <table style={{ width: "100%", fontSize: 14, marginTop: 10 }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left" }}>Nom</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {savedFiles.map((file, idx) => (
-                <tr key={`savedfile-${file.file_name}-${idx}`}>
-                  <td>{file.file_name}</td>
-                  <td>
-                    <button
-                      onClick={async () => {
-                        const res = await fetch(
-                          `http://localhost:5050/api/geojson/liste-fichiers/${file.file_name}`
-                        );
-                        const geojson = await res.json();
-                        handleFileLoad(geojson);
-                        setShowSavedFiles(false);
-                      }}
-                      style={{
-                        backgroundColor: "#2196f3",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 4,
-                        padding: "2px 6px",
-                        cursor: "pointer",
-                      }}
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-floating ring-1 ring-slate-100">
+            <div className="mb-4 flex items-center justify-between">
+              <strong className="text-lg text-slate-900">📁 Fichiers sauvegardés</strong>
+              <button
+                onClick={() => setShowSavedFiles(false)}
+                className="text-lg text-slate-500 transition hover:text-slate-800"
+                title="Fermer"
+              >
+                ❌
+              </button>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-slate-200">
+              <table className="min-w-full text-sm text-slate-800">
+                <thead className="bg-slate-50 text-left">
+                  <tr>
+                    <th className="px-4 py-2 font-semibold">Nom</th>
+                    <th className="px-4 py-2 text-center font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {savedFiles.map((file, idx) => (
+                    <tr
+                      key={`savedfile-${file.file_name}-${idx}`}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/60"}
                     >
-                      Charger
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <td className="px-4 py-2">{file.file_name}</td>
+                      <td className="px-4 py-2 text-center">
+                        <button
+                          onClick={async () => {
+                            const res = await fetch(
+                              `http://localhost:5050/api/geojson/liste-fichiers/${file.file_name}`
+                            );
+                            const geojson = await res.json();
+                            handleFileLoad(geojson);
+                            setShowSavedFiles(false);
+                          }}
+                          className="rounded-lg bg-brand-primary px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-primaryDark"
+                        >
+                          Charger
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {renameModal.open && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-floating ring-1 ring-slate-100">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  Couche
+                </p>
+                <h3 className="text-xl font-bold text-slate-900">Renommer la couche</h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeRenameModal}
+                className="text-lg text-slate-500 transition hover:text-slate-800"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={submitRename} className="space-y-4">
+              <label className="block text-sm font-semibold text-slate-700">
+                Nom de la couche
+              </label>
+              <input
+                value={renameModal.value}
+                onChange={(e) =>
+                  setRenameModal((prev) => ({ ...prev, value: e.target.value }))
+                }
+                autoFocus
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/15"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closeRenameModal}
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-primary/20 transition hover:-translate-y-0.5 hover:bg-brand-primaryDark"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

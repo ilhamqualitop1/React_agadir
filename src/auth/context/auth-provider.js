@@ -42,7 +42,8 @@ export default function AuthProvider({ children }) {
 
   // inialize
   const initialize = useCallback(() => {
-    const accessToken = sessionStorage.getItem(STORAGE_KEY);
+    const storedToken = sessionStorage.getItem(STORAGE_KEY);
+    const accessToken = storedToken && storedToken !== "null" ? storedToken : null;
 
     if (accessToken) {
       dispatch({
@@ -90,9 +91,14 @@ export default function AuthProvider({ children }) {
 
     const response = await axios.post(url, data);
 
-    const { accessToken } = response.data;
+    const { accessToken, user } = response.data;
 
     sessionStorage.setItem(STORAGE_KEY, accessToken);
+    localStorage.setItem("token", accessToken);
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("role", user.role);
+    }
 
     dispatch({
       type: "LOGIN",
@@ -100,6 +106,8 @@ export default function AuthProvider({ children }) {
         accessToken,
       },
     });
+
+    return response.data;
   }, []);
 
   const register = useCallback(async (data) => {
@@ -112,15 +120,17 @@ export default function AuthProvider({ children }) {
   //   logout
   const logout = useCallback(async () => {
 
-    sessionStorage.setItem(STORAGE_KEY, null);
+    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
     dispatch({
       type: "LOGOUT",
     });
   }, []);
 
-  const checkAuthenticated = state.accessToken !== "null"
-    ? "authenticated"
-    : "unauthenticated";
+  const hasToken = !!state.accessToken && state.accessToken !== "null";
+  const checkAuthenticated = hasToken ? "authenticated" : "unauthenticated";
 
   const status = state.loading ? "loading" : checkAuthenticated;
 

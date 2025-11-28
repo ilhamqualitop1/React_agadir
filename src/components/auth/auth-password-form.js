@@ -90,19 +90,34 @@ export default function AuthPasswordForm({ onChangeMode }) {
     [defaulValues]
   );
 
+  const inputClass =
+    "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/15";
+  const buttonClass =
+    "w-full rounded-xl bg-brand-primary px-4 py-3 text-white font-semibold shadow-lg shadow-brand-primary/20 transition hover:-translate-y-0.5 hover:bg-brand-primaryDark focus:outline-none";
+
   return (
-    <>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+    <div className="space-y-6">
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+          {message}
+        </p>
+      )}
 
       {isLoading ? (
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Chargement...</p>
+        <div className="flex flex-col items-center gap-3 py-6">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-brand-primary" />
+          <p className="text-sm text-slate-500">Chargement...</p>
         </div>
       ) : verifyOTP ? (
-        <form onSubmit={onChangePassword}>
-          <label>Code de vérification</label>
+        <form onSubmit={onChangePassword} className="space-y-4">
+          <label className="block text-left text-sm font-semibold text-slate-700">
+            Code de vérification
+          </label>
           <input
             type="text"
             placeholder="Entrez votre code"
@@ -110,9 +125,12 @@ export default function AuthPasswordForm({ onChangeMode }) {
             name="otp"
             onChange={handelChangeInput}
             required
+            className={inputClass}
           />
 
-          <label>Nouvelle mot de passe</label>
+          <label className="block text-left text-sm font-semibold text-slate-700">
+            Nouveau mot de passe
+          </label>
           <input
             type="password"
             name="password"
@@ -120,15 +138,18 @@ export default function AuthPasswordForm({ onChangeMode }) {
             onChange={handelChangeInput}
             placeholder="Nouveau mot de passe"
             required
+            className={inputClass}
           />
 
-          <button type="submit" className="btn">
+          <button type="submit" className={buttonClass}>
             Vérifier
           </button>
         </form>
       ) : (
-        <form onSubmit={onVerifyEmail} className="forgot-password-form">
-          <label>Email</label>
+        <form onSubmit={onVerifyEmail} className="space-y-4">
+          <label className="block text-left text-sm font-semibold text-slate-700">
+            Email
+          </label>
           <input
             type="email"
             name="email"
@@ -136,10 +157,13 @@ export default function AuthPasswordForm({ onChangeMode }) {
             onChange={handelChangeInput}
             placeholder="Votre email"
             required
+            className={inputClass}
           />
-          <button type="submit">Envoyer le code</button>
+          <button type="submit" className={buttonClass}>
+            Envoyer le code
+          </button>
         </form>
       )}
-    </>
+    </div>
   );
 }
